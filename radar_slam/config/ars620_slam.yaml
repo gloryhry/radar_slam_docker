@@ -1,0 +1,126 @@
+map_cloud_publish_period: 5.0
+publish_odom_tf: false
+
+front_end:
+  score_thred: 3
+  stream_lenth: 60
+  max_unmatch_count: 10
+  initial_pose:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  registration_method: icp
+  icp:
+    max_correspondence_distance: 1.5
+    transformation_epsilon: 1.0e-8
+    # transformation_rotation_epsilon: 1.0e-6
+    # euclidean_fitness_epsilon: 1.0e-5
+    maximum_iterations: 20
+    # ransac_iterations: 20
+    # ransac_outlier_rejection_threshold: 0.1
+  icp_nonlinear:
+    max_correspondence_distance: 1.5
+    transformation_epsilon: 1.0e-8
+    # transformation_rotation_epsilon: 1.0e-6
+    # euclidean_fitness_epsilon: 1.0e-5
+    # maximum_iterations: 20
+    ransac_iterations: 20
+    ransac_outlier_rejection_threshold: 0.2
+    weight_scale: 20.0
+    min_weight: 0.5
+  ndt:
+    transformation_epsilon: 1.0e-5
+    transformation_rotation_epsilon: 1.0e-5
+    euclidean_fitness_epsilon: 1.0e-5
+    maximum_iterations: 20
+    resolution: 5.0
+    step_size: 0.1
+
+loop_closing:
+  loop_step: 0
+  diff_num: 1
+  undetect_num: 20
+  detect_area: 20
+  fitness_score_limit: 300.0
+  pose_edge_information:
+    sigma_x: 0.01
+    sigma_y: 0.01
+    sigma_z: 0.001
+    sigma_qx: 0.0005
+    sigma_qy: 0.0005
+    sigma_qz: 0.0001
+  registration_method: icp
+  icp:
+    transformation_epsilon: 1.0e-4
+    max_correspondence_distance: 1.5
+  ndt:
+    transformation_epsilon: 1.0e-4
+    # maximum_iterations: 20
+    # step_size: 1.0
+    resolution: 5.0
+  scancontext:
+    enabled: true
+    lidar_height: 2.0
+    num_rings: 20
+    num_sectors: 60
+    max_radius: 80
+    exclude_recent_num: -1
+    num_candidates: 10
+    search_ratio: 0.4
+    distance_threshold: 0.3
+
+back_end:
+  regist_submaps: 10
+  fitness_score_limit: 40
+  registration_method: icp
+  icp:
+    transformation_epsilon: 1.0e-8
+    max_correspondence_distance: 1
+    # ransac_iterations: 20
+    # ransac_outlier_rejection_threshold: 0.1
+  icp_nonlinear:
+    transformation_epsilon: 1.0e-8
+    max_correspondence_distance: 2.5
+    ransac_iterations: 20
+    ransac_outlier_rejection_threshold: 0.1 
+    weight_scale: 10.0
+    min_weight: 0.2
+  pose_edge_information:
+    sigma_x: 0.1
+    sigma_y: 0.1
+    sigma_z: 0.01
+    sigma_qx: 0.005
+    sigma_qy: 0.005
+    sigma_qz: 0.0001
+  registration_visualization:
+    enabled: false
+    point_size: 2.0
+    window_name: BackEndRegistration
+    max_points_per_cloud: 5000
+    voxel_leaf_size: 0.2
+    render_every_n_edges: 5
+    min_render_interval: 0.2
+    spin_once_ms: 10
+    disable_on_render_error: true
+
+imu:
+  enabled: false
+  topic: /imu/data
+  static_init_duration: 1.0
+  gravity_magnitude: 9.81
+  extrinsic:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  noise:
+    accel: 0.001
+    gyro: 0.0001
+    accel_random_walk: 0.0005
+    gyro_random_walk: 0.00005
+    integration: 0.0003

@@ -1,0 +1,33 @@
+services:
+  radar_slam:
+    build:
+      context: .
+      dockerfile: DOCKERFILE
+    image: radar_slam:noetic-install
+    container_name: radar_slam
+    network_mode: host
+    privileged: true
+    ipc: host
+    stdin_open: true
+    tty: true
+    init: true
+    environment:
+      ROS_MASTER_URI: http://localhost:11311
+      ROS_HOSTNAME: localhost
+      TZ: Asia/Shanghai
+    volumes:
+      - ./rosbag:/rosbag
+      - /dev/bus/usb:/dev/bus/usb
+      - ./data:/root/catkin_ws/install/share/radar_lidar_static_calibration/data
+      - ./radar_slam/config:/root/catkin_ws/install/share/radar_slam/config
+      - ./radar_slam/launch:/root/catkin_ws/install/share/radar_slam/launch
+    devices:
+      - "/dev:/dev"
+    working_dir: /root/catkin_ws
+    command: >
+      bash -c "
+      source /opt/ros/noetic/setup.bash &&
+      source /root/catkin_ws/install/setup.bash &&
+      roslaunch radar_canfd_driver radar_canfd.launch &
+      exec bash
+      "

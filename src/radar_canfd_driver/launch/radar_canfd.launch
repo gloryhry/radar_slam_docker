@@ -1,0 +1,62 @@
+<launch>
+  <arg name="lib_path"       default="$(find radar_canfd_driver)/lib/libcontrolcanfd.so" doc="ZCAN library path"/>
+  <arg name="dev_type"       default="41"   doc="USBCANFD_200U=41"/>
+  <arg name="dev_index"      default="0"    doc="Device index"/>
+  <arg name="canfd_standard" default="0"    doc="0=ISO, 1=non-ISO"/>
+
+  <!-- ===== CH0: ARS620 Front ===== -->
+  <arg name="ch0_mode"       default="ars620"/>
+  <arg name="ch0_abit_baud"  default="500000"/>
+  <arg name="ch0_dbit_baud"  default="2000000"/>
+  <arg name="ch0_ars620_name"  default="ars620_front"/>
+  <arg name="ch0_ars620_frame" default="ars620_front"/>
+
+  <!-- ===== CH1: ARS620 Rear ===== -->
+  <arg name="ch1_mode"       default="ars620"/>
+  <arg name="ch1_abit_baud"  default="500000"/>
+  <arg name="ch1_dbit_baud"  default="2000000"/>
+  <arg name="ch1_ars620_name"  default="ars620_rear"/>
+  <arg name="ch1_ars620_frame" default="ars620_rear"/>
+
+  <node pkg="radar_canfd_driver" type="radar_canfd_node" name="radar_canfd_node" output="screen">
+    <param name="use_sim_time" value="false"/>
+    <param name="lib_path"       value="$(arg lib_path)"/>
+    <param name="dev_type"       value="$(arg dev_type)"/>
+    <param name="dev_index"      value="$(arg dev_index)"/>
+    <param name="canfd_standard" value="$(arg canfd_standard)"/>
+
+    <!-- CH0 -->
+    <param name="ch0_mode"       value="$(arg ch0_mode)"/>
+    <param name="ch0_abit_baud"  value="$(arg ch0_abit_baud)"/>
+    <param name="ch0_dbit_baud"  value="$(arg ch0_dbit_baud)"/>
+    <param name="ch0_ars620_name"  value="$(arg ch0_ars620_name)"/>
+    <param name="ch0_ars620_frame" value="$(arg ch0_ars620_frame)"/>
+    <param name="ch0_flip_y"   value="false"/>
+
+    <!-- CH1 -->
+    <param name="ch1_mode"       value="$(arg ch1_mode)"/>
+    <param name="ch1_abit_baud"  value="$(arg ch1_abit_baud)"/>
+    <param name="ch1_dbit_baud"  value="$(arg ch1_dbit_baud)"/>
+    <param name="ch1_ars620_name"  value="$(arg ch1_ars620_name)"/>
+    <param name="ch1_ars620_frame" value="$(arg ch1_ars620_frame)"/>
+    <param name="ch1_flip_y"   value="true"/>
+  </node>
+
+  <!-- Point cloud merger: front + rear → merged (commented out for now)
+  <node pkg="radar_canfd_driver" type="radar_merger_node" name="radar_merger_node" output="screen">
+    <param name="front_topic"   value="/ars620_front/rdi_points"/>
+    <param name="rear_topic"    value="/ars620_rear/rdi_points"/>
+    <param name="merged_topic"  value="/ars620_merged/rdi_points"/>
+    <param name="merged_frame"  value="ars620_front"/>
+    <param name="rear_x"        value="-0.10"/>
+    <param name="rear_y"        value="0.0"/>
+    <param name="rear_z"        value="0.0"/>
+    <param name="rear_yaw"      value="3.1416"/>
+    <param name="rear_pitch"    value="0.0"/>
+    <param name="rear_roll"     value="0.0"/>
+    <param name="merge_rate"    value="20.0"/>
+    <param name="flip_front_y"  value="false"/>
+    <param name="flip_rear_y"   value="true"/>
+  </node>
+  -->
+</launch>

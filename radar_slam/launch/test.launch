@@ -1,0 +1,29 @@
+<launch>
+  <param name="use_sim_time" value="true"/>
+
+  <node pkg="radar_slam" type="radarslam" name="slam" output="screen">
+    <remap from="/radarslam_input/PointCloud2" to="/RadarCombined"/>
+  </node>
+<!-- 
+  <node pkg="radar_slam_02" type="show_path.py" name="radar_path" >
+    <remap from="/tools_output/PoseStamped" to="/radarslam_output/PoseStamped" />
+  </node>
+
+  <node pkg="radar_slam_02" type="gps_to_posestamped.py" name="gps_trans" >
+  </node>
+
+  <node pkg="radar_slam_02" type="show_path.py" name="gps_path" >
+    <param name="~pub_topic" value="/gps/Path" />
+  </node> -->
+
+  <node pkg="tf" type="static_transform_publisher" name="odom_map_broadcaster" args="0 0 0 0 0 0 odom map 100" />
+
+  <!-- <include file="$(find radar_to_pointcloud2)/launch/cloud_pack.launch" />
+
+  <include file="$(find my_tools)/launch/show_path.launch" /> -->
+
+  <!-- <node pkg="rviz" type="rviz" name="rviz"/> -->
+
+     <!-- <include file="$(find radar2pointcloud)/launch/radar2pointcloud.launch" /> -->
+
+</launch>

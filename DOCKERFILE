@@ -1,0 +1,73 @@
+# syntax=docker/dockerfile:1.7
+FROM ros:noetic-ros-base AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    cmake \
+    pkg-config \
+    python3-catkin-tools \
+    python3-rosdep \
+    ros-noetic-roscpp \
+    ros-noetic-rospy \
+    ros-noetic-roslib \
+    ros-noetic-std-msgs \
+    ros-noetic-sensor-msgs \
+    ros-noetic-nav-msgs \
+    ros-noetic-message-filters \
+    ros-noetic-tf \
+    ros-noetic-pcl-ros \
+    ros-noetic-libg2o \
+    ros-noetic-sophus \
+    ros-noetic-cv-bridge \
+    libboost-all-dev \
+    libeigen3-dev \
+    libopencv-dev \
+    libpcl-dev \
+    libsuitesparse-dev \
+    libspdlog-dev \
+    libfmt-dev \
+    freeglut3-dev \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /root/catkin_ws
+RUN mkdir -p /root/catkin_ws/src /root/catkin_ws/install
+
+RUN --mount=type=bind,source=src,target=/root/catkin_ws/src,rw \
+    source /opt/ros/noetic/setup.bash \
+    && catkin_make install -DCMAKE_INSTALL_PREFIX=/root/catkin_ws/install
+
+FROM ros:noetic-ros-base AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-noetic-roscpp \
+    ros-noetic-rospy \
+    ros-noetic-roslib \
+    ros-noetic-std-msgs \
+    ros-noetic-sensor-msgs \
+    ros-noetic-nav-msgs \
+    ros-noetic-message-filters \
+    ros-noetic-tf \
+    ros-noetic-pcl-ros \
+    ros-noetic-libg2o \
+    ros-noetic-sophus \
+    ros-noetic-cv-bridge \
+    ros-noetic-visualization-msgs \
+    libopencv-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /root/catkin_ws
+COPY --from=builder /root/catkin_ws/install /root/catkin_ws/install
+
+RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc \
+    && echo "source /root/catkin_ws/install/setup.bash" >> /root/.bashrc
+
+CMD ["bash"]

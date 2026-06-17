@@ -1,0 +1,130 @@
+name: Docker image
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+  schedule:
+    - cron: '17 19 * * *'
+
+permissions:
+  contents: write
+
+env:
+  IMAGE_NAME: radar_slam
+  IMAGE_TAG: noetic-install
+  EXTERNAL_BRANCH: master
+  RADAR_SLAM_REPO: https://github.com/gloryhry/radar_slam.git
+  RADAR_CALIBRATION_REPO: https://github.com/gloryhry/radar_lidar_static_calibration.git
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout wrapper repository
+        uses: actions/checkout@v4
+
+      - name: Resolve external repository revisions
+        id: revisions
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          radar_slam_sha="$(git ls-remote "$RADAR_SLAM_REPO" "refs/heads/$EXTERNAL_BRANCH" | awk '{print $1}')"
+          radar_calibration_sha="$(git ls-remote "$RADAR_CALIBRATION_REPO" "refs/heads/$EXTERNAL_BRANCH" | awk '{print $1}')"
+
+          if [[ -z "$radar_slam_sha" ]]; then
+            echo "Unable to resolve $RADAR_SLAM_REPO branch $EXTERNAL_BRANCH" >&2
+            exit 1
+          fi
+
+          if [[ -z "$radar_calibration_sha" ]]; then
+            echo "Unable to resolve $RADAR_CALIBRATION_REPO branch $EXTERNAL_BRANCH" >&2
+            exit 1
+          fi
+
+          cache_key="${radar_slam_sha}-${radar_calibration_sha}"
+
+          {
+            echo "radar_slam_sha=$radar_slam_sha"
+            echo "radar_calibration_sha=$radar_calibration_sha"
+            echo "cache_key=$cache_key"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check scheduled build marker
+        id: external-cache
+        if: github.event_name == 'schedule'
+        uses: actions/cache/restore@v4
+        with:
+          path: .github/external-build-cache
+          key: external-${{ steps.revisions.outputs.cache_key }}
+          lookup-only: true
+
+      - name: Skip unchanged scheduled build
+        if: github.event_name == 'schedule' && steps.external-cache.outputs.cache-hit == 'true'
+        run: echo "External repositories are unchanged; skipping Docker build."
+
+      - name: Clone external source repositories
+        if: github.event_name != 'schedule' || steps.external-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf src/radar_slam src/radar_lidar_static_calibration
+          git clone --depth 1 --branch "$EXTERNAL_BRANCH" "$RADAR_SLAM_REPO" src/radar_slam
+          git clone --depth 1 --branch "$EXTERNAL_BRANCH" "$RADAR_CALIBRATION_REPO" src/radar_lidar_static_calibration
+
+      - name: Build Docker image
+        if: github.event_name != 'schedule' || steps.external-cache.outputs.cache-hit != 'true'
+        env:
+          DOCKER_BUILDKIT: '1'
+        run: docker build -f DOCKERFILE -t "$IMAGE_NAME:$IMAGE_TAG" .
+
+      - name: Package Docker image
+        id: package
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          archive="${IMAGE_NAME}-${GITHUB_REF_NAME}.tar.gz"
+          docker save "$IMAGE_NAME:$IMAGE_TAG" | gzip -9 > "$archive"
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+
+      - name: Create release and upload Docker image
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARCHIVE: ${{ steps.package.outputs.archive }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$ARCHIVE" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$ARCHIVE" --generate-notes --title "$GITHUB_REF_NAME"
+          fi
+
+      - name: Write scheduled build marker
+        if: github.event_name == 'schedule' && steps.external-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p .github/external-build-cache
+          {
+            echo "radar_slam=${{ steps.revisions.outputs.radar_slam_sha }}"
+            echo "radar_lidar_static_calibration=${{ steps.revisions.outputs.radar_calibration_sha }}"
+          } > .github/external-build-cache/revisions.txt
+
+      - name: Save scheduled build marker
+        if: github.event_name == 'schedule' && steps.external-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .github/external-build-cache
+          key: external-${{ steps.revisions.outputs.cache_key }}

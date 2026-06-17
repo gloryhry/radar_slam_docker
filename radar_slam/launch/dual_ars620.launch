@@ -1,0 +1,29 @@
+<launch>
+
+  <param name="use_sim_time" value="true"/>
+
+  <node pkg="radar_slam" type="dual_ars620" name="dual_ars620">
+    <param name="rdi_front_topic" value="/ars620_front/rdi_points"/>
+    <param name="rdi_back_topic" value="/ars620_rear/rdi_points"/>
+    <param name="radar_topic" value="RadarCombined"/>
+    <param name="quality_thresh" value="2"/>
+    <param name="mad_thersh" value="1.5"/>
+    <param name="min_pts" value="5"/>
+    <param name="cos_min" value="0.05"/>
+    <param name="range_thresh" value="70"/>
+    <param name="snr_thresh" value="-40"/>
+    <param name="rcs_thresh" value="1"/>
+    <param name="x" value="-0.1"/>
+    <param name="yaw" value="3.09"/>
+  </node>
+
+  <node pkg="radar_slam" type="radarslam" name="slam" output="screen">
+    <rosparam command="load" file="$(find radar_slam)/config/ars620_slam.yaml"/>
+    <remap from="/radarslam_input/PointCloud2" to="/RadarCombined"/>
+  </node>
+
+  <!-- <include file="$(find imu_trans)/launch/imu_trans.launch" /> -->
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="odom_map_broadcaster" args="0 0 0 0 0 0 1 map odom" />  
+  <node pkg="tf2_ros" type="static_transform_publisher" name="sr75_base_broadcaster" args="0 0 0 0 0 0 1 base_footprint ars620_front" />  
+</launch>

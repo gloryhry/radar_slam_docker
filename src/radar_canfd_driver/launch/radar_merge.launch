@@ -1,0 +1,37 @@
+<launch>
+  <!-- Point cloud merger: ars620_front + ars620_rear → merged -->
+  <!-- Usage: roslaunch radar_canfd_driver radar_merge.launch -->
+
+  <param name="use_sim_time" value="true"/>
+
+  <arg name="front_topic"  default="/ars620_front/rdi_points"/>
+  <arg name="rear_topic"   default="/ars620_rear/rdi_points"/>
+  <arg name="merged_topic" default="/ars620_merged/rdi_points"/>
+  <arg name="merged_frame" default="ars620_front"/>
+
+  <!-- Rear relative to front (default: 10cm behind, facing backward) -->
+  <arg name="rear_x"     default="-0.10"/>
+  <arg name="rear_y"     default="0.0"/>
+  <arg name="rear_z"     default="0.0"/>
+  <arg name="rear_yaw"   default="3.1416"/>
+  <arg name="rear_pitch" default="0.0"/>
+  <arg name="rear_roll"  default="0.0"/>
+
+  <!-- Y-flip already handled in driver (ch0_flip_y=false, ch1_flip_y=true) -->
+  <arg name="flip_front_y" default="false"/>
+  <arg name="flip_rear_y"  default="false"/>
+  <node pkg="radar_canfd_driver" type="radar_merger_node" name="radar_merger_node" output="screen">
+    <param name="front_topic"   value="$(arg front_topic)"/>
+    <param name="rear_topic"    value="$(arg rear_topic)"/>
+    <param name="merged_topic"  value="$(arg merged_topic)"/>
+    <param name="merged_frame"  value="$(arg merged_frame)"/>
+    <param name="rear_x"        value="$(arg rear_x)"/>
+    <param name="rear_y"        value="$(arg rear_y)"/>
+    <param name="rear_z"        value="$(arg rear_z)"/>
+    <param name="rear_yaw"      value="$(arg rear_yaw)"/>
+    <param name="rear_pitch"    value="$(arg rear_pitch)"/>
+    <param name="rear_roll"     value="$(arg rear_roll)"/>
+    <param name="flip_front_y"  value="$(arg flip_front_y)"/>
+    <param name="flip_rear_y"   value="$(arg flip_rear_y)"/>
+  </node>
+</launch>
